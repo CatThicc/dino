@@ -7,7 +7,6 @@ local whitelist  = {}
 whitelist[plr.Name] = plr.Name
 local StarterGui = game:GetService("StarterGui")
 local plrw
-local cf = plr.Character.HumanoidRootPart.CFrame
 if game:GetService("CoreGui"):FindFirstChild("DinoHealth") then
 	game:GetService("CoreGui").DinoHealth:Destroy()
 end
@@ -128,6 +127,7 @@ Kill.Text = "Kill Player"
 Kill.TextColor3 = Color3.fromRGB(255, 255, 255)
 Kill.TextSize = 14.000
 Kill.MouseButton1Click:Connect(function()
+	local cf = plr.Character.HumanoidRootPart.CFrame
 	_G.On = false 
 	_G.On = true 
 	local found = false
@@ -510,6 +510,22 @@ game:GetService("Players").PlayerAdded:Connect(function(v)
 	TextButton.TextSize = 14.000
 	TextButton.TextWrapped = true
 	Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale + 0.8, 0, 0)
+	TextButton.MouseButton1Click:Connect(function()
+		if TextButton.Parent == Players then
+			local thumbType = Enum.ThumbnailType.HeadShot
+			local thumbSize = Enum.ThumbnailSize.Size420x420
+			local content = game:GetService("Players"):GetUserThumbnailAsync(game:GetService("Players")[v.Name].UserId, thumbType, thumbSize)
+			whitelist[TextButton.Name] = TextButton.Name
+			StarterGui:SetCore("SendNotification", {
+				Title = "Whitelisted";
+				Text = TextButton.Name.." has been added to the whitelist.";
+				Icon = tostring(content)
+			})
+			Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale - 0.8, 0, 0)
+			Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale + 0.8, 0, 0)
+			TextButton.Parent = Whitelisted
+			end
+		end)
 end)
 
 game:GetService("Players").PlayerRemoving:Connect(function(v)
