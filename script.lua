@@ -1,3 +1,4 @@
+_G.farming = false
 _G.On = false
 if game:GetService("CoreGui"):FindFirstChild("Dino") then
 	game:GetService("CoreGui"):FindFirstChild("Dino"):Destroy()
@@ -86,47 +87,92 @@ local Whitelisted = Instance.new("ScrollingFrame")
 local UIListLayout2 = Instance.new("UIListLayout")
 local WhitelistTitle = Instance.new("TextLabel")
 local MoreOptions = Instance.new("TextButton")
+local Cancel = Instance.new("TextButton")
 
---Properties:
+--//
+function drinkwater()
+	local cf = plr.Character.HumanoidRootPart.CFrame
+	local water = workspace.Water.Model.Part
 
-Dino.Name = "Dino"
-Dino.Parent = game:GetService("CoreGui")
+	local args = {
+		[1] = "drink",
+		[2] = water
+	}
 
-Background.Name = "Background"
-Background.Parent = Dino
-Background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Background.BackgroundTransparency = 1.000
-Background.Position = UDim2.new(0.480359882, 0, 0.431203902, 0)
-Background.Size = UDim2.new(0, 267, 0, 111)
-Background.Image = "rbxassetid://3570695787"
-Background.ImageColor3 = Color3.fromRGB(45, 45, 45)
-Background.ScaleType = Enum.ScaleType.Slice
-Background.SliceCenter = Rect.new(100, 100, 100, 100)
-Background.SliceScale = 0.120
+	local tim = 0
+	spawn(function()
+		while true do
+			wait(1)
+			tim = tim + 1
+			if tim >= 2 then break end
+		end
+	end)
+	spawn(function()
+		while true do
+			wait(0.1)
 
-KillBackground.Name = "KillBackground"
-KillBackground.Parent = Background
-KillBackground.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-KillBackground.BackgroundTransparency = 1.000
-KillBackground.Position = UDim2.new(0.0329218097, 0, 0.578524828, 0)
-KillBackground.Size = UDim2.new(0, 84, 0, 25)
-KillBackground.Image = "rbxassetid://3570695787"
-KillBackground.ImageColor3 = Color3.fromRGB(30, 30, 30)
-KillBackground.ScaleType = Enum.ScaleType.Slice
-KillBackground.SliceCenter = Rect.new(100, 100, 100, 100)
-KillBackground.SliceScale = 0.120
+			plr.Character:SetPrimaryPartCFrame(water.CFrame - Vector3.new(0,10,0))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			if tim >= 2 then 
+				plr.Character:SetPrimaryPartCFrame(cf)
+				break 
+			end
+		end
+	end)
+end
 
-Kill.Name = "Kill"
-Kill.Parent = KillBackground
-Kill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Kill.BackgroundTransparency = 1.000
-Kill.BorderSizePixel = 0
-Kill.Size = UDim2.new(0, 83, 0, 24)
-Kill.Font = Enum.Font.GothamSemibold
-Kill.Text = "Kill Player"
-Kill.TextColor3 = Color3.fromRGB(255, 255, 255)
-Kill.TextSize = 14.000
-Kill.MouseButton1Click:Connect(function()
+function eatfood()
+	local plr = game:GetService("Players").LocalPlayer
+	local cf = plr.Character.HumanoidRootPart.CFrame
+	local corpse = nil
+	local ffound = false
+	for i,v in pairs(workspace.Food:GetChildren()) do
+		if v:FindFirstChild("Corpse") and not ffound and v:FindFirstChild("Corpse").Position.Y > -100 then
+			corpse = v
+			ffound = true
+		end
+	end
+	local args = {
+		[1] = "eat",
+		[2] = corpse.Corpse
+	}
+	local tim = 0
+	spawn(function()
+		while true do
+			wait(1)
+			tim = tim + 1
+			if tim >= 2 then break end
+		end
+	end)
+	spawn(function()
+		while true do
+			wait(0.1)
+
+			plr.Character:SetPrimaryPartCFrame(corpse.Corpse.CFrame - Vector3.new(0,10,0))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+			if tim >= 2 then 
+				plr.Character:SetPrimaryPartCFrame(cf)
+				break 
+			end
+		end
+	end)
+end
+function killplayer()
+	local myhealth = nil
+	if workspace:FindFirstChild("Dinosaurs") and plr.Character ~= nil then
+		for _,v in pairs(workspace:FindFirstChild("Dinosaurs"):GetChildren()) do
+			if v == plr.Character then
+				myhealth = v.Data.Health.Value
+			end
+		end
+	end
+	
 	local cf = plr.Character.HumanoidRootPart.CFrame
 	_G.On = false 
 	_G.On = true 
@@ -181,10 +227,37 @@ Kill.MouseButton1Click:Connect(function()
 		Player.Text = tostring("Waiting")
 
 		local function checkchar()
+			if myhealth ~= nil and myhealth < 400 then
+				_G.On = false
+			end
 			if not plrw.Character and _G.On then
 				Health.Text = tostring(0)
 				Player.Text = tostring(plrw.Name)
+				if _G.farming then
+					eatfood()
+					wait(0.2)
+					drinkwater()
+				end
 				_G.On = false
+				if game:GetService("Players"):FindFirstChild(plrw.Name) then
+					local thumbType = Enum.ThumbnailType.HeadShot
+					local thumbSize = Enum.ThumbnailSize.Size420x420
+					local content = game:GetService("Players"):GetUserThumbnailAsync(plrw.UserId, thumbType, thumbSize)
+					StarterGui:SetCore("SendNotification", {
+						Title = "Killed...";
+						Text = plrw.Name.." has been killed.";
+						Icon = content
+					})
+				else
+					local thumbType = Enum.ThumbnailType.HeadShot
+					local thumbSize = Enum.ThumbnailSize.Size420x420
+					local content = game:GetService("Players"):GetUserThumbnailAsync(plrw.UserId, thumbType, thumbSize)
+					StarterGui:SetCore("SendNotification", {
+						Title = "Combat Logged...";
+						Text = plrw.Name.." has combat logged.";
+						Icon = content
+					})
+				end
 			end
 		end
 
@@ -195,54 +268,85 @@ Kill.MouseButton1Click:Connect(function()
 		if plrw.Character:FindFirstChild("SitHeight") and plrw.Character:FindFirstChild("SitHeight").Value > 5 then
 			sith = 5
 		end
-
-		plr.Character:SetPrimaryPartCFrame(plrw.Character.PrimaryPart.CFrame - Vector3.new(-3,30,0))
+		local plrp = plrw.Character.HumanoidRootPart
+		if (plrw.Character:FindFirstChild("LLeg")) then
+			plrp = plrw.Character:FindFirstChild("LLeg")
+			wing = wing + 3
+		end
+		plr.Character:SetPrimaryPartCFrame(plrp.CFrame - Vector3.new(-3,30,0))
 		local i=0
 		while true do
 			if i >= 2 then break end
 			wait(1)
 			i = i + 1
-			plr.Character:SetPrimaryPartCFrame(plrw.Character.HumanoidRootPart.CFrame - Vector3.new(-3,30,0))
+			plr.Character:SetPrimaryPartCFrame(plrp.CFrame - Vector3.new(-3,30,0))
 		end
 		while _G.On do
-			checkchar()
 			if plrw.Character ~= nil then
 				Health.Text = tostring(math.floor(plrw.Character.Humanoid.Health + 0.5))
-			end
-			checkchar()
-			if plrw.Character ~= nil then
 				Player.Text = tostring(plrw.Name)
+				plr.Character:SetPrimaryPartCFrame(plrp.CFrame - Vector3.new(0,15-wing+sith,0))
+				game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
+				game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
 			end
-			checkchar()
+			wait()
 			if plrw.Character ~= nil then
-				plr.Character:SetPrimaryPartCFrame(plrw.Character.PrimaryPart.CFrame - Vector3.new(0,15-wing+sith,0))
-			end
-			checkchar()
-			if plrw.Character ~= nil then
+				Health.Text = tostring(math.floor(plrw.Character.Humanoid.Health + 0.5))
+				Player.Text = tostring(plrw.Name)
+				plr.Character:SetPrimaryPartCFrame(plrp.CFrame - Vector3.new(0,15-wing+sith,0))
+				game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
 				game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
 			end
 			checkchar()
-			if plrw.Character ~= nil then
-				game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
-			end
-			checkchar()
-			wait(0.1)
-			checkchar()
-			if plrw.Character ~= nil then
-				plr.Character:SetPrimaryPartCFrame(plrw.Character.PrimaryPart.CFrame - Vector3.new(0,15-wing+sith,0))
-			end
-			checkchar()
-			if plrw.Character ~= nil then
-				game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
-			end
 			if not _G.On then
-				Health.Text = tostring(0)
+				Health.Text = tostring("<health>")
 				Player.Text = tostring("<player>")
 				plr.Character:SetPrimaryPartCFrame(cf)
 				break
 			end
 		end
 	end
+end
+
+Dino.Name = "Dino"
+Dino.Parent = game:GetService("CoreGui")
+
+Background.Name = "Background"
+Background.Parent = Dino
+Background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Background.BackgroundTransparency = 1.000
+Background.Position = UDim2.new(0.480359882, 0, 0.431203902, 0)
+Background.Size = UDim2.new(0, 267, 0, 111)
+Background.Image = "rbxassetid://3570695787"
+Background.ImageColor3 = Color3.fromRGB(45, 45, 45)
+Background.ScaleType = Enum.ScaleType.Slice
+Background.SliceCenter = Rect.new(100, 100, 100, 100)
+Background.SliceScale = 0.120
+
+KillBackground.Name = "KillBackground"
+KillBackground.Parent = Background
+KillBackground.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+KillBackground.BackgroundTransparency = 1.000
+KillBackground.Position = UDim2.new(0.0329218097, 0, 0.578524828, 0)
+KillBackground.Size = UDim2.new(0, 84, 0, 25)
+KillBackground.Image = "rbxassetid://3570695787"
+KillBackground.ImageColor3 = Color3.fromRGB(30, 30, 30)
+KillBackground.ScaleType = Enum.ScaleType.Slice
+KillBackground.SliceCenter = Rect.new(100, 100, 100, 100)
+KillBackground.SliceScale = 0.120
+
+Kill.Name = "Kill"
+Kill.Parent = KillBackground
+Kill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Kill.BackgroundTransparency = 1.000
+Kill.BorderSizePixel = 0
+Kill.Size = UDim2.new(0, 83, 0, 24)
+Kill.Font = Enum.Font.GothamSemibold
+Kill.Text = "Kill Player"
+Kill.TextColor3 = Color3.fromRGB(255, 255, 255)
+Kill.TextSize = 14.000
+Kill.MouseButton1Click:Connect(function()
+	killplayer()
 end)
 
 plrbox.Name = "plrbox"
@@ -294,17 +398,6 @@ AutoBackground.ScaleType = Enum.ScaleType.Slice
 AutoBackground.SliceCenter = Rect.new(100, 100, 100, 100)
 AutoBackground.SliceScale = 0.120
 
-Autofarm.Name = "Autofarm"
-Autofarm.Parent = AutoBackground
-Autofarm.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Autofarm.BackgroundTransparency = 1.000
-Autofarm.BorderSizePixel = 0
-Autofarm.Size = UDim2.new(0, 84, 0, 25)
-Autofarm.Font = Enum.Font.GothamSemibold
-Autofarm.Text = "Autofarm"
-Autofarm.TextColor3 = Color3.fromRGB(255, 255, 255)
-Autofarm.TextSize = 14.000
-
 TextLabel_2.Parent = AutoBackground
 TextLabel_2.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 TextLabel_2.BorderColor3 = Color3.fromRGB(30, 30, 30)
@@ -315,6 +408,39 @@ TextLabel_2.Font = Enum.Font.Code
 TextLabel_2.Text = "OFF"
 TextLabel_2.TextColor3 = Color3.fromRGB(255, 0, 0)
 TextLabel_2.TextSize = 14.000
+
+Autofarm.Name = "Autofarm"
+Autofarm.Parent = AutoBackground
+Autofarm.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Autofarm.BackgroundTransparency = 1.000
+Autofarm.BorderSizePixel = 0
+Autofarm.Size = UDim2.new(0, 84, 0, 25)
+Autofarm.Font = Enum.Font.GothamSemibold
+Autofarm.Text = "Autofarm"
+Autofarm.TextColor3 = Color3.fromRGB(255, 255, 255)
+Autofarm.TextSize = 14.000
+Autofarm.MouseButton1Click:Connect(function()
+	if not _G.farming then
+		_G.On = true
+		_G.farming = true
+		TextLabel_2.TextColor3 = Color3.fromRGB(0, 255, 0)
+		TextLabel_2.Text = "ON"
+	else
+		_G.On = false
+		_G.farming = false
+		TextLabel_2.TextColor3 = Color3.fromRGB(255, 0, 0)
+		TextLabel_2.Text = "OFF"
+	end
+	while _G.farming do
+		wait(0.1)
+		killplayer()
+		if not _G.farming then
+			Health.Text = tostring("<health>")
+			Player.Text = tostring("<player>")
+			break
+		end
+	end
+end)
 
 EatBackground.Name = "EatBackground"
 EatBackground.Parent = Background
@@ -327,6 +453,10 @@ EatBackground.ScaleType = Enum.ScaleType.Slice
 EatBackground.SliceCenter = Rect.new(100, 100, 100, 100)
 EatBackground.SliceScale = 0.120
 
+UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 158, 120)), ColorSequenceKeypoint.new(0.41, Color3.fromRGB(255, 223, 146)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 239, 200))}
+UIGradient.Rotation = 37
+UIGradient.Parent = EatBackground
+
 Eat.Name = "Eat"
 Eat.Parent = EatBackground
 Eat.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -338,44 +468,8 @@ Eat.Text = "Eat"
 Eat.TextColor3 = Color3.fromRGB(0, 0, 0)
 Eat.TextSize = 14.000
 Eat.MouseButton1Click:Connect(function()
-	local plr = game:GetService("Players").LocalPlayer
-	local cf = plr.Character.HumanoidRootPart.CFrame
-	local corpse = nil
-	local ffound = false
-	for i,v in pairs(workspace.Food:GetChildren()) do
-		if v:FindFirstChild("Corpse") and not ffound then
-			corpse = v
-			ffound = true
-		end
-	end
-	local args = {
-		[1] = "eat",
-		[2] = corpse.Corpse
-	}
-	local tim = 0
-	spawn(function()
-		while true do
-			wait(1)
-			tim = tim + 1
-			if tim >= 2 then break end
-		end
-	end)
-	spawn(function()
-		while true do
-			wait(0.1)
-
-			plr.Character:SetPrimaryPartCFrame(corpse.Corpse.CFrame - Vector3.new(0,10,0))
-			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
-			if tim >= 2 then 
-				plr.Character:SetPrimaryPartCFrame(cf)
-				break 
-			end
-		end
-	end)
+	eatfood()
 end)
-UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 158, 120)), ColorSequenceKeypoint.new(0.41, Color3.fromRGB(255, 223, 146)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 239, 200))}
-UIGradient.Rotation = 37
-UIGradient.Parent = EatBackground
 
 DrinkBackground.Name = "DrinkBackground"
 DrinkBackground.Parent = Background
@@ -399,34 +493,7 @@ Drink.Text = "Drink"
 Drink.TextColor3 = Color3.fromRGB(0, 0, 0)
 Drink.TextSize = 14.000
 Drink.MouseButton1Click:Connect(function()
-	local cf = plr.Character.HumanoidRootPart.CFrame
-	local water = workspace.Water.Model.Part
-
-	local args = {
-		[1] = "drink",
-		[2] = water
-	}
-
-	local tim = 0
-	spawn(function()
-		while true do
-			wait(1)
-			tim = tim + 1
-			if tim >= 2 then break end
-		end
-	end)
-	spawn(function()
-		while true do
-			wait(0.1)
-
-			plr.Character:SetPrimaryPartCFrame(water.CFrame - Vector3.new(0,10,0))
-			game:GetService("Players").LocalPlayer.RemoteEvent:FireServer(unpack(args))
-			if tim >= 2 then 
-				plr.Character:SetPrimaryPartCFrame(cf)
-				break 
-			end
-		end
-	end)
+	drinkwater()
 end)
 
 UIGradient_2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(139, 254, 255)), ColorSequenceKeypoint.new(0.41, Color3.fromRGB(128, 183, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(127, 101, 255))}
@@ -492,8 +559,8 @@ for _,v in pairs(game:GetService("Players"):GetPlayers()) do
 		TextButton.TextWrapped = true
 	end
 end
-local csd = -3.2
-Players.CanvasSize = UDim2.new(0, 0, csd+(0.8*#Players:GetChildren()), 0)
+local csd = -0.8
+Players.CanvasSize = UDim2.new(0, 0, csd+(0.18*#Players:GetChildren()), 0)
 
 game:GetService("Players").PlayerAdded:Connect(function(v)
 	local TextButton = Instance.new("TextButton")
@@ -509,7 +576,7 @@ game:GetService("Players").PlayerAdded:Connect(function(v)
 	TextButton.TextScaled = true
 	TextButton.TextSize = 14.000
 	TextButton.TextWrapped = true
-	Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale + 0.8, 0, 0)
+	Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale + 0.18, 0, 0)
 	TextButton.MouseButton1Click:Connect(function()
 		if TextButton.Parent == Players then
 			local thumbType = Enum.ThumbnailType.HeadShot
@@ -521,8 +588,8 @@ game:GetService("Players").PlayerAdded:Connect(function(v)
 				Text = TextButton.Name.." has been added to the whitelist.";
 				Icon = tostring(content)
 			})
-			Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale - 0.8, 0, 0)
-			Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale + 0.8, 0, 0)
+			Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale - 0.18, 0, 0)
+			Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale + 0.18, 0, 0)
 			TextButton.Parent = Whitelisted
 			end
 		end)
@@ -531,11 +598,11 @@ end)
 game:GetService("Players").PlayerRemoving:Connect(function(v)
 	if Players:FindFirstChild(v.Name) then
 		Players:FindFirstChild(v.Name):Destroy()
-		Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale - 0.8, 0, 0)
+		Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale - 0.18, 0, 0)
 	end
 	if Whitelisted:FindFirstChild(v.Name) then
 		Whitelisted:FindFirstChild(v.Name):Destroy()
-		Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale - 0.8, 0, 0)
+		Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale - 0.18, 0, 0)
 	end
 end)
 
@@ -552,8 +619,8 @@ for _,v in pairs(Players:GetChildren()) do
 				Text = v.Name.." has been added to the whitelist.";
 				Icon = tostring(content)
 			})
-			Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale - 0.8, 0, 0)
-			Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale + 0.8, 0, 0)
+			Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale - 0.18, 0, 0)
+			Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale + 0.18, 0, 0)
 				v.Parent = Whitelisted
 			else
 				local thumbType = Enum.ThumbnailType.HeadShot
@@ -565,8 +632,8 @@ for _,v in pairs(Players:GetChildren()) do
 					Text = v.Name.." has been removed from the whitelist.";
 					Icon = content
 				})
-				Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale - 0.8, 0, 0)
-				Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale + 0.8, 0, 0)
+				Whitelisted.CanvasSize = UDim2.new(0, 0, Whitelisted.CanvasSize.Y.Scale - 0.18, 0, 0)
+				Players.CanvasSize = UDim2.new(0, 0, Players.CanvasSize.Y.Scale + 0.18, 0, 0)
 				v.Parent = Players
 			end
 		end)
